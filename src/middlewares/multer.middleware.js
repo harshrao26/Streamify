@@ -1,13 +1,17 @@
 import multer from "multer";
 
+// Define storage options
 const storage = multer.diskStorage({
-    destination: (req, file, cb)=>{
-        cd(null, "./public/temp");
-    },
-    filename: (req, file, cb)=>{
-        // const uniqueSuffix = Date.now() + '-' + Math.round
-        cb(null,file.originalname)
+    destination: (req, file, cb) => {
+        cb(null, "./public/temp");
+    },  
+    filename: (req, file, cb) => {
+        cb(null, file.originalname);
     }
-})
+});
 
-export const upload = multer({storage});
+
+// Create Multer instance with the defined options
+const upload = multer({ storage });
+
+export default upload;
