@@ -7,7 +7,7 @@ import ApiResponse from "../utils/ApiResponse.js";
 const registerUser = asyncHandler(async (req, res) => {
     const { fullName, email, username, password } = req.body;
 
-    if ([fullName, email, username, password].some((field)=>field?.trim()==="")) {
+    if ([fullName, email, username, password].some((field) => !field?.trim())) {
         throw new ApiError(400, 'All fields are required');
     }
 
@@ -15,19 +15,25 @@ const registerUser = asyncHandler(async (req, res) => {
     if (existingUser) {
         throw new ApiError(409, 'User already exists');
     }
+    console.log(req.files)
 
-    const avatarFilePath = req.files?.avatar[0]?.path;
-    // const coverImgFilePath = req.files?.coverImg[0]?.path;
+    const avatarFilePath = req.files?.avatar?.[0]?.path;
+    // const coverImgFilePath = req.files?.coverImg?.[0]?.path;
 
-    if (!avatarFilePath ) {
+    let coverImgFilePath 
+    if(req.files && Array.isArray(req.files.coverImg) && req.files.coverImg.length > 0) {
+        coverImgFilePath = req.files.coverImg[0].path
+    }
+
+    if (!avatarFilePath) {
         throw new ApiError(400, 'Avatar is required');
     }
 
     const avatar = await uploadOnCloudinary(avatarFilePath);
-    // const coverImage = await uploadOnCloudinary(coverImgFilePath);
+    const coverImg = coverImgFilePath ? await uploadOnCloudinary(coverImgFilePath) : null;
 
-    if (!avatar ) {
-        throw new ApiError(500, 'Failed to upload images');
+    if (!avatar) {
+        throw new ApiError(400, 'Failed to upload avatar');
     }
 
     const user = await User.create({
@@ -36,7 +42,7 @@ const registerUser = asyncHandler(async (req, res) => {
         email,
         password,
         avatar: avatar.url,
-        // coverImg: coverImage.url || ""
+        coverImg: coverImg?.url || ""
     });
 
     if (!user) {
@@ -44,8 +50,9 @@ const registerUser = asyncHandler(async (req, res) => {
     }
 
     const createdUser = await User.findById(user._id).select("-password -refreshToken");
+
     if (!createdUser) {
-        throw new ApiError(500, 'Failed to retrieve created user');
+        throw new ApiError(500, 'Something went wrong while registering the user');
     }
 
     return res.status(201).json(new ApiResponse(200, createdUser, 'User created successfully'));
