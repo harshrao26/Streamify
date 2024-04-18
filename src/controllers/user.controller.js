@@ -3,6 +3,8 @@ import ApiError from '../utils/ApiError.js'
 import { User } from '../models/user.model.js'
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import ApiResponse from "../utils/ApiResponse.js";
+import jwt from 'jsonwebtoken'
+
 const generateAccessAndRefreshToken = async (userId) => {
     try {
         // Await User.findById to get the user object
@@ -124,8 +126,6 @@ const loginUser = asyncHandler(async (req, res) => {
             'Login successful')); // Success message
 });
 
-
-
 const logoutUser = asyncHandler(async (req, res) => {
     await User.findByIdAndUpdate(req.user._id, {
         $set: {
@@ -148,5 +148,25 @@ const logoutUser = asyncHandler(async (req, res) => {
 
 
 })
+
+const RefreshAccessToken = asyncHandler(async (req, res) => {
+    const IncomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken;
+
+    if (!IncomingRefreshToken) {
+        throw new ApiError(400, 'Refresh token is required');
+    }
+
+    const decodedIncomingRefreshToken = jwt.verify(IncomingRefreshToken, process.env.REFRESH_TOKEN_SECRET);
+    const user = await User.findById(decodedIncomingRefreshToken?._id);
+    if (!user) {
+        throw new ApiError(400, 'User not found');
+    }
+
+    if(IncomingRefreshToken !== user?.refreshToken ){
+        throw new ApiError(401,"Invalid refresh token");
+    
+    }
+}
+)
 
 export { registerUser, loginUser, logoutUser };
