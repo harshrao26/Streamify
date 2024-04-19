@@ -166,8 +166,7 @@ const RefreshAccessToken = asyncHandler(async (req, res) => {
         throw new ApiError(401, "Invalid refresh token");
 
     }
-}
-)
+})
 
 const changePassword = asyncHandler(async (req, res) => {
     const { newPassword, oldPassword } = req.body;
@@ -182,11 +181,14 @@ const changePassword = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Incorrect password");
     }
     user.password = newPassword;
-    await user.save({validateBeforeSave: false});
+    await user.save({ validateBeforeSave: false });
     return res
-    .status(200)
-    .json({message: "Password changed" });
+        .status(200)
+        .json({ message: "Password changed" });
 
 })
 
-export { registerUser, loginUser, logoutUser };
+const getCurrentUser = asyncHandler(async (req, res) => {
+        
+})
+export { registerUser, loginUser, logoutUser, RefreshAccessToken, changePassword };
