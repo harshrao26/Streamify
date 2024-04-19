@@ -162,11 +162,31 @@ const RefreshAccessToken = asyncHandler(async (req, res) => {
         throw new ApiError(400, 'User not found');
     }
 
-    if(IncomingRefreshToken !== user?.refreshToken ){
-        throw new ApiError(401,"Invalid refresh token");
-    
+    if (IncomingRefreshToken !== user?.refreshToken) {
+        throw new ApiError(401, "Invalid refresh token");
+
     }
 }
 )
+
+const changePassword = asyncHandler(async (req, res) => {
+    const { newPassword, oldPassword } = req.body;
+
+    const user = User.findById(req.user?._id)
+    if (!user) {
+        throw new ApiError(400, "Invalid User")
+    }
+
+    const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
+    if (!isPasswordCorrect) {
+        throw new ApiError(400, "Incorrect password");
+    }
+    user.password = newPassword;
+    await user.save({validateBeforeSave: false});
+    return res
+    .status(200)
+    .json({message: "Password changed" });
+
+})
 
 export { registerUser, loginUser, logoutUser };
