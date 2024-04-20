@@ -191,7 +191,7 @@ const changePassword = asyncHandler(async (req, res) => {
 const getCurrentUser = asyncHandler(async (req, res) => {
 })
 
-const updateAccoutDetails = asyncHandler(async (req, res) => {
+const updateAccountDetails = asyncHandler(async (req, res) => {
     const { fullName, email } = req.body;
 
     if (!fullName || !email) {
@@ -213,5 +213,68 @@ const updateAccoutDetails = asyncHandler(async (req, res) => {
         throw new ApiError(400, "User not found");
     }
 
+    return res
+        .status(200)
+        .json(new ApiResponse(200, user, "Account details updated successfully"));
+
+
 })
-export { registerUser, loginUser, logoutUser, RefreshAccessToken, changePassword };
+
+const updateUserAvatar = asyncHandler(async (req, res) => {
+    const avatarLocalPath = req.file?.path;
+    if (!avatarLocalPath) {
+        throw new ApiError(400, "No Avatar file was uploaded");
+    }
+    const avatar = await uploadOnCloudinary(avatarLocalPath);
+    if (!avatar?.url) {
+        throw new ApiError(400, "Avatar URL not exists");
+    }
+
+    const user = await User.findByIdAndUpdate(req.user?._id, {
+        $set: {
+            avatar: avatar.url
+        }
+    }, {
+        new: true
+    }).select("-password -refreshToken");
+
+    if (!user) {
+        throw new ApiError(400, "User not found during avatar update");
+    }
+    return res
+    .status(200)
+    .json(new ApiResponse(200, user, "Avatar updated successfully"));
+
+
+})
+
+const updateUsercoverImg = asyncHandler(async (req, res) => {
+    const coverImgLocalPath = req.file?.path;
+    if (!coverImgLocalPath) {
+        throw new ApiError(400, "No Avatar file was uploaded");
+    }
+    const coverImg = await uploadOnCloudinary(avatarLocalPath);
+    if (!coverImg?.url) {
+        throw new ApiError(400, "coverImg URL not exists");
+    }
+
+    return res
+    .status(200)
+    .json(new ApiResponse(200, user, "coverImg updated successfully"));
+
+    const user = await User.findByIdAndUpdate(req.user?._id, {
+        $set: {
+            coverImg: coverImg.url
+        }
+    }, {
+        new: true
+    }).select("-password -refreshToken");
+
+    if (!user) {
+        throw new ApiError(400, "User not found during coverImg update");
+    }
+
+
+})
+
+export { registerUser, loginUser, logoutUser, RefreshAccessToken, changePassword, getCurrentUser, updateAccountDetails, updateUserAvatar, updateUsercoverImg };
